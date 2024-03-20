@@ -13,6 +13,7 @@ AWS Bedrockの導入において、以下を実現したいケースを想定す
 - Bedrock（今回はClaude V2）が応答を返す。この入力内容と応答内容をセットで、CloudWatch LogsおよびS3に保管する。
 
 ## 構成図
+![diagram](https://github.com/ShogoItoDev/bedrock-chalice-demo/assets/30908643/e3751fd2-daeb-4a0b-aee3-0aed9ab7319a)
 
 ## 使い方
 

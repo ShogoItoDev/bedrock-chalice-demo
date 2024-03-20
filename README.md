@@ -68,10 +68,7 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
    - 入力したテキスト: input > inputBodyJson > inputText
    - 出力されたテキスト: output > outputBodyJson > outputText
 
-
-     
-    
-    ```
+```
     {
     "schemaType": "ModelInvocationLog",
     "schemaVersion": "1.0",

@@ -43,12 +43,13 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
 ## ポイント
   - API Gatewayのタイプが「プライベート」のため、インターネットからはアクセスできない。
   - 指定のVPCエンドポイントからのみアクセスを許可するAPIGWのリソースポリシーがChaliceにより設定され、指定以外のVPCエンドポイント経由でもアクセスできない
-    - 単に「API GWのタイプがプライベートである」だけでは、他AWSアカウントのVPCエンドポイント経由でもアクセスできてしまうので、必ずaws:SourceVpceの指定が必要。参考：https://dev.classmethod.jp/articles/private-api-is-not-private-for-you/
+    - 単に「API GWのタイプがプライベートである」だけでは、他AWSアカウントのVPCエンドポイント経由でもアクセスできてしまうので、必ずaws:SourceVpceの指定が必要。
+    - 参考：https://dev.classmethod.jp/articles/private-api-is-not-private-for-you/
 
 ```
-    {
-    "Version": "2012-10-17",
-    "Statement": [
+{
+  "Version": "2012-10-17",
+  "Statement": [
     {
       "Effect": "Allow",
       "Principal": "*",
@@ -56,12 +57,12 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
       "Resource": "arn:*:execute-api:*:*:*",
       "Condition": {
         "StringEquals": {
-          "aws:SourceVpce": "vpce-xxxxxxxxx"
-         }
+          "aws:SourceVpce": "vpce-xxxxxxxxxxxxxxx"
         }
-       }
-      ]
-     }
+      }
+    }
+  ]
+}
 ```
 
 ### 出力されるログのスキーマ

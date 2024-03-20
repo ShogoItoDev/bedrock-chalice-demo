@@ -67,55 +67,63 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
 
 ### 出力されるログのスキーマ
 - infra/bedrock-logging.tfで作成したS3バケットおよびCW Logsグループに、プロンプトの入出力内容が保管されるので、保管期間等は転送先で必要に応じ変更する
-   - 入力したテキスト: input > inputBodyJson > inputText
-   - 出力されたテキスト: output > outputBodyJson > outputText
+   - 入力したテキスト（Claude V2の場合）: input > inputBodyJson > prompt
+   - 出力されたテキスト（Claude V2の場合）: output > outputBodyJson > completion
 
 ```
-    {
+{
     "schemaType": "ModelInvocationLog",
     "schemaVersion": "1.0",
-    "timestamp": "xxxxxxxxxxxx",
-    "accountId": "xxxxxxxxxxxx",
+    "timestamp": "xxxxxxxxxxxxxxxxxxxxxxx",
+    "accountId": "xxxxxxxxxxxxxxxxxxxxxxx",
     "identity": {
-        "arn": "xxxxxxxxxxxx"
+        "arn": "xxxxxxxxxxxxxxxxxxxxxxx"
     },
     "region": "ap-northeast-1",
-    "requestId": "xxxxxxxxxxxx",
+    "requestId": "xxxxxxxxxxxxxxxxxxxxxxx",
     "operation": "InvokeModelWithResponseStream",
-    "modelId": "amazon.titan-text-express-v1",
+    "modelId": "anthropic.claude-v2:1",
     "input": {
         "inputContentType": "application/json",
         "inputBodyJson": {
-            "inputText": "User: Hello\n\nBot:",
-            "textGenerationConfig": {
-                "maxTokenCount": 2048,
-                "stopSequences": [
-                    "User:"
-                ],
-                "temperature": 0,
-                "topP": 0.9
-            }
+            "prompt": "\n\nHuman: Hello\n\nAssistant:",
+            "max_tokens_to_sample": 300,
+            "temperature": 1,
+            "top_k": 250,
+            "top_p": 0.999,
+            "stop_sequences": [
+                "\n\nHuman:"
+            ],
+            "anthropic_version": "bedrock-2023-05-31"
         },
-        "inputTokenCount": 7
+        "inputTokenCount": 10
     },
     "output": {
         "outputContentType": "application/json",
         "outputBodyJson": [
             {
-                "outputText": " Hello! How can I assist you today?",
-                "index": 0,
-                "totalOutputTextTokenCount": 11,
-                "completionReason": "FINISH",
-                "inputTextTokenCount": 7,
+                "completion": " Hello",
+                "stop_reason": null,
+                "stop": null
+            },
+            {
+                "completion": "!",
+                "stop_reason": null,
+                "stop": null
+            },
+            {
+                "completion": "",
+                "stop_reason": "stop_sequence",
+                "stop": "\n\nHuman:",
                 "amazon-bedrock-invocationMetrics": {
-                    "inputTokenCount": 7,
-                    "outputTokenCount": 11,
-                    "invocationLatency": 864,
-                    "firstByteLatency": 864
+                    "inputTokenCount": 10,
+                    "outputTokenCount": 6,
+                    "invocationLatency": 765,
+                    "firstByteLatency": 690
                 }
             }
         ],
-        "outputTokenCount": 11
+        "outputTokenCount": 6
     }
 }
 ```

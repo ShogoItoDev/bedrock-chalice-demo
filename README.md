@@ -1,8 +1,8 @@
 # はじめに
-- 本レポジトリの内容は作成者が個人的に考案・作成したものであり、所属組織等を代表するものではありません。
+- 本レポジトリは作成者が個人的に考案・作成したものであり、所属組織等を代表するものではありません。
 - 本レポジトリは検証目的であり、利用による損害等の発生には対応致しかねます。
 
-# このレポジトリの目的
+# 本レポジトリの目的
 AWS Bedrockの導入において、以下を実現したいケースを想定する
 - セキュリティ上の理由から、特定のVPCからのみアクセス可能なクローズドのAPIとしたい
 - ガバナンス上の理由から、モデルに対する入力および応答内容を長期ログ保管したい
@@ -64,6 +64,89 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
   ]
 }
 ```
+### ロギングに必要なIAMポリシー・バケットポリシー
+
+- AWSマネジメントコンソールでは[設定]から変更する
+- マネジメントコンソールでは少々分かりづらいが、CloudWatch Logsに対する権限はサービスロールを、S3に対する権限はバケットポリシーを利用する
+
+![bedrock-logging](https://github.com/ShogoItoDev/bedrock-chalice-demo/assets/30908643/2a78c5ed-0a8d-41cc-8a1b-b9b597f114d9)
+
+
+#### CloudWatch Logsへのロギングを許可するIAMポリシーの記載例
+参考：https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/model-invocation-logging.html#setup-cloudwatch-logs-destination
+
+信頼ポリシー
+```
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "bedrock.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceAccount": "accountId" 
+        },
+        "ArnLike": {
+          "aws:SourceArn": "arn:aws:bedrock:region:accountId:*"
+        }
+      }
+    }
+  ]
+}
+```
+許可内容
+```
+{
+    "Version": "2012-10-17", 
+    "Statement": [ 
+        {
+            "Effect": "Allow", 
+            "Action": [ 
+                "logs:CreateLogStream", 
+                "logs:PutLogEvents" 
+            ], 
+            "Resource": "arn:aws:logs:region:accountId:log-group:logGroupName:log-stream:aws/bedrock/modelinvocations" 
+         } 
+    ]
+}
+```
+
+#### S3へのロギングを許可するバケットポリシーの記載例
+参考：https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/model-invocation-logging.html#setup-s3-destination
+
+```
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AmazonBedrockLogsWrite",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "bedrock.amazonaws.com"
+      },
+      "Action": [
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::bucketName/prefix/AWSLogs/accountId/BedrockModelInvocationLogs/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceAccount": "accountId" 
+        },
+        "ArnLike": {
+           "aws:SourceArn": "arn:aws:bedrock:region:accountId:*"
+        }
+      }
+    }
+  ]
+}
+```
+
 
 ### 出力されるログのスキーマ
 - infra/bedrock-logging.tfで作成したS3バケットおよびCW Logsグループに、プロンプトの入出力内容が保管されるので、保管期間等は転送先で必要に応じ変更する

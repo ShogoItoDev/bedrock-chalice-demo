@@ -22,7 +22,7 @@ AWS Bedrockの導入において、以下を実現したいケースを想定す
 
 ### 前提条件
 - Terraformがインストールされていること
-- AWS Chaliceがインストールされていること。参考：https://aws.github.io/chalice/quickstart.html
+- AWS Chaliceがインストールされていること 参考：https://aws.github.io/chalice/quickstart.html
 
 ### infra/variables.tfで、以下の値を必要に応じて変更
 

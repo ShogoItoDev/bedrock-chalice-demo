@@ -4,6 +4,7 @@
 # はじめに
 - 本レポジトリは作成者が個人的に考案・作成したものであり、所属組織等を代表するものではありません。
 - 本レポジトリは検証目的であり、利用による損害等の発生には対応致しかねます。
+- 参考にした文献・Webサイトは脚注に記載しています（2024/3閲覧）
 
 # 本レポジトリの目的
 AWS Bedrockの導入において、以下を実現したいケースを想定する
@@ -22,7 +23,7 @@ AWS Bedrockの導入において、以下を実現したいケースを想定す
 
 ### 前提条件
 - Terraformがインストールされていること
-- AWS Chaliceがインストールされていること 参考：https://aws.github.io/chalice/quickstart.html
+- AWS Chaliceがインストールされていること[^1]
 
 ### infra/variables.tfで、以下の値を必要に応じて変更
 
@@ -56,8 +57,7 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
 ## ポイント
   - API Gatewayのタイプが「プライベート」のため、インターネットからはアクセスできない。
   - 指定のVPCエンドポイントからのみアクセスを許可するAPIGWのリソースポリシーがChaliceにより設定され、指定以外のVPCエンドポイント経由でもアクセスできない
-    - 単に「API GWのタイプがプライベートである」だけでは、他AWSアカウントのVPCエンドポイント経由でもアクセスできてしまうので、必ずaws:SourceVpceの指定が必要。
-    - 参考：https://dev.classmethod.jp/articles/private-api-is-not-private-for-you/
+    - 単に「API GWのタイプがプライベートである」だけでは、他AWSアカウントのVPCエンドポイント経由でもアクセスできてしまうので、必ずaws:SourceVpceの指定が必要[^2]。
 
 <details>
 
@@ -83,8 +83,7 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
 
 ### 基盤モデルの利用に必要なIAMポリシー
 
-- Bedrockの基盤モデルでの推論には以下のアクションの許可が必要
-- 参考：https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/security_iam_id-based-policy-examples.html#security_iam_id-based-policy-examples-deny
+- Bedrockの基盤モデルでの推論には以下のアクションの許可が必要[^3]
 
 <details>
       
@@ -101,8 +100,6 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
     }
 }        
 ```
-</details>
-
 
 - アクセスを許可する対象の基盤モデルのARNおよびモデルIDは、以下のコマンドで取得できる。
   
@@ -116,6 +113,7 @@ aws bedrock list-foundation-models
 "modelArn": "arn:aws:bedrock:ap-northeast-1::foundation-model/anthropic.claude-v2:1"
 "modelId" : "anthropic.claude-v2:1"
 ```
+</details>
 
 ### ロギングに必要なIAMポリシー・バケットポリシー
 
@@ -125,8 +123,7 @@ aws bedrock list-foundation-models
 ![bedrock-logging](https://github.com/ShogoItoDev/bedrock-chalice-demo/assets/30908643/2a78c5ed-0a8d-41cc-8a1b-b9b597f114d9)
 
 
-#### CloudWatch Logsへのロギングを許可するIAMポリシーの記載例
-参考：https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/model-invocation-logging.html#setup-cloudwatch-logs-destination
+#### CloudWatch Logsへのロギングを許可するIAMポリシーの記載例[^4]
 
 <details>
 
@@ -173,8 +170,7 @@ aws bedrock list-foundation-models
 ```
 </details>
 
-#### S3へのロギングを許可するバケットポリシーの記載例
-参考：https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/model-invocation-logging.html#setup-s3-destination
+#### S3へのロギングを許可するバケットポリシーの記載例[^5]
 
 <details>
 
@@ -273,3 +269,21 @@ aws bedrock list-foundation-models
 }
 ```
 </details>
+
+# 改善点
+
+## Bedrock側のリソースポリシーで、より厳密にアクセス制御できないか
+- 例として「指定したLambda関数のARNからのみ基盤モデルの実行を許可する（それ以外はDenyする）」ようなリソースポリシーが掛けられないかと考えた。本記事の執筆時点（2024/3）では、Bedrockはリソースベースのポリシーに未対応[^6]
+
+## Lambda関数自体をVPC内部に配置できないか
+- Bedrock特有というよりAPI Gateway+Lambdaのアーキテクチャの観点になるが、API GatewayがプライベートであってもLambda関数自体が非VPCであるのが懸念となる場合。今回は検証外としたが、API GatewayのVPCリンクを採用すればVPC Lambdaも併用可能と考えられるので追加検証したい。
+- ただし、VPCリンクのターゲットとなるのはNLBで、ALBは利用できない。かつ、NLBのターゲットとしてLambda関数は登録できない（2024/3時点）。そのため、まず「ALBのターゲットグループにLambda関数を登録」し「そのALBをNLBのターゲットグループとして登録」、最後に「そのNLBとAPI GatewayでVPCリンクを作成」となると考えられる[^7][^8]
+
+[^1]:https://aws.github.io/chalice/quickstart.html
+[^2]:https://dev.classmethod.jp/articles/private-api-is-not-private-for-you/
+[^3]:https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/security_iam_id-based-policy-examples.html#security_iam_id-based-policy-examples-deny
+[^4]:https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/model-invocation-logging.html#setup-cloudwatch-logs-destination
+[^5]:https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/model-invocation-logging.html#setup-s3-destination
+[^6]:https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/security-iam.html
+[^7]:https://qiita.com/fkooo/items/577831abd9803eb91b16
+[^8]:https://dev.classmethod.jp/articles/alb-type-target-group-for-nlb/

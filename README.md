@@ -65,6 +65,39 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
   ]
 }
 ```
+
+### 基盤モデルの利用に必要なIAMポリシー
+
+- Bedrockの基盤モデルでの推論には以下のアクションの許可が必要
+- 参考：https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/security_iam_id-based-policy-examples.html#security_iam_id-based-policy-examples-deny
+      
+```
+  {
+    "Version": "2012-10-17",
+    "Statement": {
+        "Effect": "Allow",
+        "Action": [
+            "bedrock:InvokeModel",
+            "bedrock:InvokeModelWithResponseStream"
+         ],
+        "Resource": "arn:aws:bedrock:<region>::foundation-model/<model-id>"
+    }
+}        
+```
+
+- アクセスを許可する対象の基盤モデルのARNおよびモデルIDは、以下のコマンドで取得できる。
+  
+```
+aws bedrock list-foundation-models
+```
+
+- 例えば、Anthropic Claude V2.1のモデルARN・IDは下記になる（東京リージョンの場合）
+  
+```
+"modelArn": "arn:aws:bedrock:ap-northeast-1::foundation-model/anthropic.claude-v2:1"
+"modelId" : "anthropic.claude-v2:1"
+```
+
 ### ロギングに必要なIAMポリシー・バケットポリシー
 
 - AWSマネジメントコンソールでは[設定]から変更する
@@ -89,10 +122,10 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringEquals": {
-          "aws:SourceAccount": "accountId" 
+          "aws:SourceAccount": "<accountId>" 
         },
         "ArnLike": {
-          "aws:SourceArn": "arn:aws:bedrock:region:accountId:*"
+          "aws:SourceArn": "arn:aws:bedrock:<region>:<accountId>:*"
         }
       }
     }
@@ -110,7 +143,7 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
                 "logs:CreateLogStream", 
                 "logs:PutLogEvents" 
             ], 
-            "Resource": "arn:aws:logs:region:accountId:log-group:logGroupName:log-stream:aws/bedrock/modelinvocations" 
+            "Resource": "arn:aws:logs:region:<accountId>:log-group:logGroupName:log-stream:aws/bedrock/modelinvocations" 
          } 
     ]
 }
@@ -133,14 +166,14 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
         "s3:PutObject"
       ],
       "Resource": [
-        "arn:aws:s3:::bucketName/prefix/AWSLogs/accountId/BedrockModelInvocationLogs/*"
+        "arn:aws:s3:::<bucketName>/<prefix>/AWSLogs/<accountId>/BedrockModelInvocationLogs/*"
       ],
       "Condition": {
         "StringEquals": {
-          "aws:SourceAccount": "accountId" 
+          "aws:SourceAccount": "<accountId>" 
         },
         "ArnLike": {
-           "aws:SourceArn": "arn:aws:bedrock:region:accountId:*"
+           "aws:SourceArn": "arn:aws:bedrock:<region>:<accountId>:*"
         }
       }
     }

@@ -20,6 +20,10 @@ AWS Bedrockの導入において、以下を実現したいケースを想定す
 
 ## 使い方
 
+### 前提条件
+- Terraformがインストールされていること
+- AWS Chaliceがインストールされていること。参考：https://aws.github.io/chalice/quickstart.html
+
 ### infra/variables.tfで、以下の値を必要に応じて変更
 
   - system_name（システム名）
@@ -39,6 +43,11 @@ terraform apply
   - api_gateway_endpoint_vpce: 上で作成されたVPCエンドポイントのIDを入力
 
 ### chalice deployを実行後、作成されたAPI GatewayのURLに対し、プロンプトを入力
+
+```
+cd demo-app
+chalice deploy
+```
 
 #### 入力例
 ```

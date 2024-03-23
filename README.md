@@ -1,4 +1,5 @@
-*初回作成：2024/3*
+![Github Created At](https://img.shields.io/github/created-at/ShogoItoDev/bedrock-chalice-demo)
+
 
 # はじめに
 - 本レポジトリは作成者が個人的に考案・作成したものであり、所属組織等を代表するものではありません。

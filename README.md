@@ -59,6 +59,8 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
     - 単に「API GWのタイプがプライベートである」だけでは、他AWSアカウントのVPCエンドポイント経由でもアクセスできてしまうので、必ずaws:SourceVpceの指定が必要。
     - 参考：https://dev.classmethod.jp/articles/private-api-is-not-private-for-you/
 
+<details>
+
 ```
 {
   "Version": "2012-10-17",
@@ -77,11 +79,14 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
   ]
 }
 ```
+</details>
 
 ### 基盤モデルの利用に必要なIAMポリシー
 
 - Bedrockの基盤モデルでの推論には以下のアクションの許可が必要
 - 参考：https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/security_iam_id-based-policy-examples.html#security_iam_id-based-policy-examples-deny
+
+<details>
       
 ```
   {
@@ -96,6 +101,8 @@ curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/He
     }
 }        
 ```
+</details>
+
 
 - アクセスを許可する対象の基盤モデルのARNおよびモデルIDは、以下のコマンドで取得できる。
   
@@ -121,7 +128,10 @@ aws bedrock list-foundation-models
 #### CloudWatch Logsへのロギングを許可するIAMポリシーの記載例
 参考：https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/model-invocation-logging.html#setup-cloudwatch-logs-destination
 
-信頼ポリシー
+<details>
+
+- 信頼ポリシー
+
 ```
 {
   "Version": "2012-10-17",
@@ -144,7 +154,8 @@ aws bedrock list-foundation-models
   ]
 }
 ```
-許可内容
+
+- 許可内容
 ```
 {
     "Version": "2012-10-17", 
@@ -155,14 +166,17 @@ aws bedrock list-foundation-models
                 "logs:CreateLogStream", 
                 "logs:PutLogEvents" 
             ], 
-            "Resource": "arn:aws:logs:region:<accountId>:log-group:logGroupName:log-stream:aws/bedrock/modelinvocations" 
+            "Resource": "arn:aws:logs:region:<accountId>:log-group:<logGroupName>:log-stream:aws/bedrock/modelinvocations" 
          } 
     ]
 }
 ```
+</details>
 
 #### S3へのロギングを許可するバケットポリシーの記載例
 参考：https://docs.aws.amazon.com/ja_jp/bedrock/latest/userguide/model-invocation-logging.html#setup-s3-destination
+
+<details>
 
 ```
 {
@@ -192,12 +206,14 @@ aws bedrock list-foundation-models
   ]
 }
 ```
-
+</details>
 
 ### 出力されるログのスキーマ
 - infra/bedrock-logging.tfで作成したS3バケットおよびCW Logsグループに、プロンプトの入出力内容が保管されるので、保管期間等は転送先で必要に応じ変更する
    - 入力したテキスト（Claude V2の場合）: input > inputBodyJson > prompt
    - 出力されたテキスト（Claude V2の場合）: output > outputBodyJson > completion
+
+<details>
 
 ```
 {
@@ -256,3 +272,4 @@ aws bedrock list-foundation-models
     }
 }
 ```
+</details>

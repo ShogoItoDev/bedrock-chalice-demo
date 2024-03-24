@@ -2,7 +2,7 @@
   "version": "2.0",
   "app_name": "demo-app",
   "api_gateway_endpoint_type": "PRIVATE",
-  "api_gateway_endpoint_vpce": "vpce-xxxxxxxx", # Your VPC Endpoint ID.
+  "api_gateway_endpoint_vpce": "<YOUR_VPC_ENDPOINT_ID_HERE>", 
   "autogen_policy": false,
   "iam_policy_file": "policy.json",
   "stages": {

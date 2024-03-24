@@ -13,8 +13,8 @@ AWS Bedrockの導入において、以下を実現したいケースを想定す
 
 こうしたケースを想定し、以下のアーキテクチャパターンを検討してみる
 - 共通基盤となるVPCを1つ作成し、APIの呼び出し口となるVPCエンドポイントを設置する。API Gatewayのリソースポリシーで、このVPCエンドポイントを経由したアクセスのみを許可する
-- API GatewayからLambdaを発火し、入力内容（プロンプト）をBedrockに受け渡す。
-- Bedrock（今回はClaude V2）が応答を返す。この入力内容と応答内容をセットで、CloudWatch LogsおよびS3に保管する。
+- API GatewayからLambdaを発火し、入力内容（プロンプト）をBedrockに受け渡す（今回はここのロジックの作り込みは必要最小限）
+- Bedrock（今回はClaude V2.1）が応答を返す。この入力内容と応答内容をセットで、CloudWatch LogsおよびS3に保管する。
 
 ## 構成図
 ![diagram](https://github.com/ShogoItoDev/bedrock-chalice-demo/assets/30908643/e3751fd2-daeb-4a0b-aee3-0aed9ab7319a)
@@ -52,7 +52,7 @@ chalice deploy
 
 #### 入力例
 ```
-curl -X https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/Hello
+curl -X POST https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/Hello
 ```
 ## ポイント
   - API Gatewayのタイプが「プライベート」のため、インターネットからはアクセスできない。

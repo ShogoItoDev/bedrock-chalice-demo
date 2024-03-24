@@ -7,7 +7,7 @@ import json
 
 bedrock_runtime = boto3.client('bedrock-runtime')
 
-@app.route('/{prompt}', methods=['POST'])
+@app.route('/generate/{prompt}', methods=['POST'])
 def generate(prompt):
   body = json.dumps({
     "prompt": "\n\nHuman:" + prompt + "\n\nAssistant:",

@@ -16,24 +16,24 @@ AWS Bedrockの導入において、以下を実現したいケースを想定す
 - API GatewayからLambdaを発火し、入力内容（プロンプト）をBedrockに受け渡す（今回はここのロジックの作り込みは必要最小限）
 - Bedrock（今回はClaude V2.1）が応答を返す。この入力内容と応答内容をセットで、CloudWatch LogsおよびS3に保管する。
 
-## 構成図
+# 構成図
 ![diagram](https://github.com/ShogoItoDev/bedrock-chalice-demo/assets/30908643/b7052ce6-56f6-40c3-8b85-130dfcc1a771)
 
 
 
-## 使い方
+# 使い方
 
-### 前提条件
+## 前提条件
 - Terraformがインストールされていること
 - AWS Chaliceがインストールされていること[^1]
 
-### infra/variables.tfで、以下の値を必要に応じて変更
+## infra/variables.tfで、以下の値を必要に応じて変更
 
   - system_name（システム名）
   - environment（環境種別）
   - vpc_cidr（VPCのアドレス範囲）
 
-### terraform applyを実行
+## terraform applyを実行
 
 ```
 cd infra
@@ -46,11 +46,11 @@ private_api_gateway_vpce_id = "vpce-xxxxxxxxxxxx"
 
   
   
-### demo-app/.chalice/config.jsonで、以下の箇所を変更
+## demo-app/.chalice/config.jsonで、以下の箇所を変更
 
   - api_gateway_endpoint_vpce: Outputで出力されたVPCエンドポイントのIDを入力
 
-### chalice deployを実行
+## chalice deployを実行
 
 ```
 cd demo-app
@@ -60,13 +60,13 @@ chalice deploy
 Rest API URL: https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/
 ```
 
-### 同じVPCに作成された「ec2-bedrock-api-client」にセッションマネージャーでログインし、プロンプトを入力
+## 同じVPCに作成された「ec2-bedrock-api-client」にセッションマネージャーでログインし、プロンプトを入力
 
-#### 入力例
+### 入力例
 ```
 curl -X POST https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/generate/Hello
 ```
-## ポイント
+# ポイント
   - API Gatewayのタイプが「プライベート」のため、インターネットからはアクセスできない。
   - VPCエンドポイントのセキュリティグループで以下のインバウンドルールを許可する。
     - タイプ：HTTPS
@@ -96,7 +96,7 @@ curl -X POST https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/genera
 ```
 </details>
 
-### 基盤モデルの利用に必要なIAMポリシー
+## 基盤モデルの利用に必要なIAMポリシー
 
 - Bedrockの基盤モデルでの推論には以下のアクションの許可が必要[^3]
 
@@ -130,7 +130,7 @@ aws bedrock list-foundation-models
 ```
 </details>
 
-### ロギングに必要なIAMポリシー・バケットポリシー
+## ロギングに必要なIAMポリシー・バケットポリシー
 
 - AWSマネジメントコンソールでは[設定]から変更する
 - マネジメントコンソールでは少々分かりづらいが、CloudWatch Logsに対する権限はサービスロールを、S3に対する権限はバケットポリシーを利用する
@@ -138,7 +138,7 @@ aws bedrock list-foundation-models
 ![bedrock-logging](https://github.com/ShogoItoDev/bedrock-chalice-demo/assets/30908643/2a78c5ed-0a8d-41cc-8a1b-b9b597f114d9)
 
 
-#### CloudWatch Logsへのロギングを許可するIAMポリシーの記載例[^4]
+## CloudWatch Logsへのロギングを許可するIAMポリシーの記載例[^4]
 
 <details>
 
@@ -185,7 +185,7 @@ aws bedrock list-foundation-models
 ```
 </details>
 
-#### S3へのロギングを許可するバケットポリシーの記載例[^5]
+## S3へのロギングを許可するバケットポリシーの記載例[^5]
 
 <details>
 
@@ -219,7 +219,7 @@ aws bedrock list-foundation-models
 ```
 </details>
 
-### 出力されるログのスキーマ
+## 出力されるログのスキーマ
 - infra/bedrock-logging.tfで作成したS3バケットおよびCW Logsグループに、プロンプトの入出力内容が保管されるので、保管期間等は転送先で必要に応じ変更する
    - 入力したテキスト（Claude V2の場合）: input > inputBodyJson > prompt
    - 出力されたテキスト（Claude V2の場合）: output > outputBodyJson > completion

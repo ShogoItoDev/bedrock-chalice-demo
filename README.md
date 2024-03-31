@@ -17,7 +17,9 @@ AWS Bedrockの導入において、以下を実現したいケースを想定す
 - Bedrock（今回はClaude V2.1）が応答を返す。この入力内容と応答内容をセットで、CloudWatch LogsおよびS3に保管する。
 
 ## 構成図
-![diagram](https://github.com/ShogoItoDev/bedrock-chalice-demo/assets/30908643/e3751fd2-daeb-4a0b-aee3-0aed9ab7319a)
+![diagram](https://github.com/ShogoItoDev/bedrock-chalice-demo/assets/30908643/b7052ce6-56f6-40c3-8b85-130dfcc1a771)
+
+
 
 ## 使い方
 
@@ -35,20 +37,30 @@ AWS Bedrockの導入において、以下を実現したいケースを想定す
 
 ```
 cd infra
+terraform init
 terraform apply
+
+<Output>
+private_api_gateway_vpce_id = "vpce-xxxxxxxxxxxx"
 ```
+
   
   
 ### demo-app/.chalice/config.jsonで、以下の箇所を変更
 
-  - api_gateway_endpoint_vpce: 上で作成されたVPCエンドポイントのIDを入力
+  - api_gateway_endpoint_vpce: Outputで出力されたVPCエンドポイントのIDを入力
 
-### chalice deployを実行後、作成されたAPI GatewayのURLに対し、プロンプトを入力
+### chalice deployを実行
 
 ```
 cd demo-app
 chalice deploy
+
+<OutPut>
+Rest API URL: https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/
 ```
+
+### 同じVPCに作成された「ec2-bedrock-api-client」にセッションマネージャーでログインし、プロンプトを入力
 
 #### 入力例
 ```
@@ -56,9 +68,12 @@ curl -X POST https://xxxxxxx.execute-api.ap-northeast-1.amazonaws.com/api/genera
 ```
 ## ポイント
   - API Gatewayのタイプが「プライベート」のため、インターネットからはアクセスできない。
+  - VPCエンドポイントのセキュリティグループで以下のインバウンドルールを許可する。
+    - タイプ：HTTPS
+    - ソース：許可したいIPアドレス等。今回は、アクセス元となるEC2と同一のセキュリティグループを指定
   - 指定のVPCエンドポイントからのみアクセスを許可するAPIGWのリソースポリシーがChaliceにより設定され、指定以外のVPCエンドポイント経由でもアクセスできない
     - 単に「API GWのタイプがプライベートである」だけでは、他AWSアカウントのVPCエンドポイント経由でもアクセスできてしまうので、必ずaws:SourceVpceの指定が必要[^2]。
-
+    
 <details>
 
 ```
